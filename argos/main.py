@@ -31,6 +31,7 @@ from argos.notify import build_notifier
 from argos.pipeline import Pipeline
 from argos.profiling.store import ProfileStore
 from argos.retention import purge_crop_files
+from argos.settings_store import build_settings_store
 from argos.zones import build_zone_store
 
 log = get_logger(__name__)
@@ -54,6 +55,7 @@ async def _retention_loop(store: ProfileStore, settings: Settings) -> None:
 async def lifespan(app: FastAPI):
     settings = get_settings()
     configure_logging()
+    settings_store = build_settings_store(settings)  # applies persisted UI overrides
     store = ProfileStore(settings.db_path())
     bus = EventBus()
     cameras = build_camera_store(settings)
@@ -78,6 +80,7 @@ async def lifespan(app: FastAPI):
     app.state.bus = bus
     app.state.cameras = cameras
     app.state.zones = zones
+    app.state.settings_store = settings_store
     app.state.notifier = notifier
     app.state.crop_analyzers = crop_analyzers
     app.state.pipeline = pipeline

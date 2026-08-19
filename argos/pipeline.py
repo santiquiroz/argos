@@ -76,6 +76,13 @@ class Pipeline:
         except Exception as exc:  # keep the loop resilient; one bad frame shouldn't kill ingest
             log.error("pipeline_error", error=str(exc))
 
+    async def set_notifier(self, notifier: Notifier | None) -> None:
+        """Hot-swap the notifier (used when notification settings change at runtime)."""
+        old = self._notifier
+        self._notifier = notifier
+        if old is not None:
+            await old.close()
+
     async def stop(self) -> None:
         self._stopped = True
         await self._ingestor.close()

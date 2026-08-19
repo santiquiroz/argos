@@ -61,7 +61,15 @@ export interface SettingsSnapshot {
   frigate_url: string;
   analyzers: Record<string, boolean>;
   retention_days: Record<string, number>;
-  notifications: { enabled: boolean; notify_on: string; cooldown_s: number };
+  notifications: { enabled: boolean; webhook_url: string; notify_on: string; cooldown_s: number };
+}
+export interface SettingsUpdate {
+  notify_webhook_url?: string;
+  notify_on?: string;
+  notify_cooldown_s?: number;
+  retain_crops_days?: number;
+  retain_embeddings_days?: number;
+  retain_events_days?: number;
 }
 
 export interface StatusInfo {
@@ -89,6 +97,7 @@ export const api = {
   addCamera: (name: string, url: string) => client.post<Camera>("/cameras", { name, url }).then((r) => r.data),
   removeCamera: (name: string) => client.delete(`/cameras/${name}`).then((r) => r.data),
   settings: () => client.get<SettingsSnapshot>("/settings").then((r) => r.data),
+  updateSettings: (body: SettingsUpdate) => client.patch<SettingsSnapshot>("/settings", body).then((r) => r.data),
   scan: (body: { subnet?: string | null; sweep: boolean; audit_credentials: boolean }) =>
     client.post<DiscoveredCamera[]>("/discovery/scan", body).then((r) => r.data),
   notifyTest: () => client.post("/notify/test").then((r) => r.data),
