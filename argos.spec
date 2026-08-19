@@ -46,7 +46,7 @@ exe = EXE(
     exclude_binaries=True,
     name="Argos",
     console=True,       # console shows the API key + logs
-    icon=None,
+    icon=str(ROOT / "installer" / "argos.ico"),
 )
 
 coll = COLLECT(

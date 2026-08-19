@@ -38,7 +38,11 @@ Frigate's tracked-object events and adds the analytics Frigate does **not** do:
 | **Action / behaviour recognition** (loiter, fall, run, climb, fight) | — | ✅ |
 | **Cross-camera person re-identification** | — | ✅ |
 | **Gait recognition** | — | ✅ (experimental) |
-| **Unified person profiles** (face + re-ID + gait + behaviour timeline) | — | ✅ |
+| **Unified person profiles** (timeline + enroll + merge) | — | ✅ |
+| **Zones / tripwires** (alert + ignore-mask) | ✅ | ✅ (editable in-UI) |
+| **Smart notifications** (webhook, filtered + cooldown) | via HA | ✅ built-in |
+| **AI daily digest** (local-LLM, private) | — | ✅ |
+| **System dashboard** (real VRAM/CPU/uptime) | — | ✅ |
 
 If you don't run Frigate, Argos can pull RTSP directly from a Hikvision/HiLook DVR and run its own
 person detector — see [`docs/frigate-integration.md`](docs/frigate-integration.md) for both paths.
@@ -72,11 +76,13 @@ Full design and the decisions behind it: **[ARCHITECTURE.md](ARCHITECTURE.md)**.
 
 ## Status
 
-**Pre-alpha scaffold.** This repository currently contains the architecture, the pluggable
-pipeline skeleton, the ONNX Runtime + DirectML inference core, the ingest adapters, the profile
-store schema, and the FastAPI app shell. Analyzer model weights are **not** bundled — see
-[`docs/models.md`](docs/models.md) and `scripts/download_models.py`. See [ROADMAP.md](ROADMAP.md)
-for what's implemented vs. planned.
+**v0.2.0 — working alpha, packaged.** Full admin UI (live cameras, discovery, zones, persons,
+events, settings), direct-RTSP detection pipeline, notifications, AI digest, system dashboard, and a
+Windows installer. Analyzer model weights (pose / re-ID / face / action / gait) are **not** bundled —
+see [`docs/models.md`](docs/models.md) and `scripts/download_models.py`; person **detection** on the
+direct path uses a YOLO model you export with `scripts/export_yolo.py`. Grab the installer from
+[Releases](https://github.com/santiquiroz/argos/releases). See [ROADMAP.md](ROADMAP.md) for what's
+next.
 
 ---
 

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "argos-vision"
-version = "0.1.0"
+version = "0.2.0"
 description = "Local-first behavioural & identity analytics layer for your own security cameras (Frigate/HiLook RTSP), on AMD GPU via ONNX Runtime + DirectML."
 readme = "README.md"
 requires-python = ">=3.12"

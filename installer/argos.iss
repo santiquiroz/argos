@@ -3,7 +3,7 @@
 ;   "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\argos.iss
 
 #define AppName "Argos"
-#define AppVersion "0.1.0"
+#define AppVersion "0.2.0"
 #define AppPublisher "Santiago Quiroz"
 #define AppExe "Argos.exe"
 
@@ -22,6 +22,8 @@ SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64compatible
 WizardStyle=modern
 PrivilegesRequired=admin
+SetupIconFile=argos.ico
+UninstallDisplayIcon={app}\{#AppExe}
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
