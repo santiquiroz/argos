@@ -22,9 +22,11 @@ Write-Host "==> Building backend binary (PyInstaller)" -ForegroundColor Cyan
 python -m PyInstaller argos.spec --noconfirm --clean
 
 Write-Host "==> Building installer (Inno Setup)" -ForegroundColor Cyan
-$iscc = Get-Command iscc -ErrorAction SilentlyContinue
-if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
-if (Test-Path $iscc) {
+$iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+foreach ($cand in @("${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe", "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe")) {
+  if (-not $iscc -and (Test-Path $cand)) { $iscc = $cand }
+}
+if ($iscc -and (Test-Path $iscc)) {
   & $iscc "installer\argos.iss"
   Write-Host "==> Installer written to release\" -ForegroundColor Green
 } else {

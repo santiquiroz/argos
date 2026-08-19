@@ -32,16 +32,14 @@ Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 Source: "..\dist\Argos\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 [Icons]
-; WorkingDir points at a writable user data folder (the app writes its DB/crops there).
-Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"; WorkingDir: "{localappdata}\Argos"
-Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; WorkingDir: "{localappdata}\Argos"; Tasks: desktopicon
+; The app is frozen-aware: at runtime it writes its DB/crops/.env to %LOCALAPPDATA%\Argos
+; (the running user's), regardless of WorkingDir — so no per-user dirs are created at install time.
+Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExe}"; WorkingDir: "{app}"
+Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Additional icons:"
 Name: "firewall"; Description: "Allow Argos through the Windows Firewall (LAN access)"; GroupDescription: "Network:"
-
-[Dirs]
-Name: "{localappdata}\Argos"
 
 [Run]
 ; Optional: open the LAN port through the firewall so other devices can reach the UI.
@@ -49,4 +47,4 @@ Filename: "netsh"; Parameters: "advfirewall firewall add rule name=""Argos"" dir
 Filename: "{app}\{#AppExe}"; Description: "Launch Argos now"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
-Filename: "netsh"; Parameters: "advfirewall firewall delete rule name=""Argos"""; Flags: runhidden
+Filename: "netsh"; Parameters: "advfirewall firewall delete rule name=""Argos"""; Flags: runhidden; RunOnceId: "DelArgosFirewall"
