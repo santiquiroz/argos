@@ -7,7 +7,7 @@ Legend: ✅ implemented · 🟡 scaffolded (interface + wiring, model/impl pendi
 - ✅ `pyproject`, config (pydantic-settings), structured logging (structlog)
 - ✅ ONNX Runtime + DirectML session factory (ported from Upflow, AMD-only subset)
 - ✅ Silent CPU-fallback detection surfaced per model
-- 🟡 VRAM admission control (DXGI probe) — port from Upflow `device_semaphores`/`resource_probes`
+- ✅ VRAM admission control — real DXGI `QueryVideoMemoryInfo` probe (ctypes, verified on RX 7800 XT)
 
 ## Phase 1 — Ingest
 - ✅ `PersonObservation` dataclasses + `Ingestor` interface
@@ -49,11 +49,17 @@ Legend: ✅ implemented · 🟡 scaffolded (interface + wiring, model/impl pendi
 - ✅ Alert filtering by event kind + per-subject cooldown (fights alert fatigue) + test endpoint
 - ✅ Person thumbnails in the UI (latest crop per person)
 - ✅ Crop-file retention enforced (PRIVACY.md promise) via the retention loop
-- ✅ Person detail page (cross-camera observation timeline with crop thumbnails)
+- ✅ Person detail page (cross-camera observation timeline with crop thumbnails) + **merge**
 - ✅ Zones per camera (normalized polygons): **alert** = tripwire event, **ignore** = noise mask;
   SVG polygon editor over the live view. Works on the direct-RTSP path (Frigate path pending
   box-format verification).
-- ⏳ Edit analyzer toggles / retention / notify from the UI (persisted)
+- ✅ Notifications + retention editable from the UI (persisted, hot-applied)
+- ✅ System dashboard (real VRAM/CPU/RAM/uptime + activity counts)
+- ✅ AI daily digest (deterministic + optional local-LLM polish, Anthropic-compatible)
+- ✅ Config backup (export/import cameras + zones + settings)
+- ⏳ Edit analyzer toggles from the UI (still `.env` + restart)
+- ⏳ Zones on the Frigate path (fetch camera dims via `/api/config`)
+- ⏳ README screenshots ✅ / installer icon ✅
 
 ## Phase 5 — Packaging
 - ⏳ PyInstaller single-binary (backend serves built React SPA) — reuse bipolar-code spec
