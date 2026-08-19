@@ -21,6 +21,16 @@ ROCm), reusing the inference core proven in [Upflow](https://github.com/santiqui
 
 ---
 
+## Screenshots
+
+![Argos dashboard](docs/screenshots/dashboard.png)
+
+| Persons | Zones | Discovery |
+|---|---|---|
+| ![Persons](docs/screenshots/persons.png) | ![Zones](docs/screenshots/zones.png) | ![Discovery](docs/screenshots/discovery.png) |
+
+---
+
 ## Why not just use Frigate?
 
 You should use Frigate — Argos is designed to *complement* it, not replace it. Frigate (0.16+) is
