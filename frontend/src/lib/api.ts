@@ -103,6 +103,8 @@ export const api = {
   status: () => client.get<StatusInfo>("/status").then((r) => r.data),
   persons: () => client.get<Person[]>("/persons").then((r) => r.data),
   enroll: (id: string, name: string) => client.post(`/persons/${id}/enroll`, { name }).then((r) => r.data),
+  mergePerson: (targetId: string, sourceId: string) =>
+    client.post(`/persons/${targetId}/merge`, { source_id: sourceId }).then((r) => r.data),
   events: (limit = 100) => client.get<ArgosEvent[]>("/events", { params: { limit } }).then((r) => r.data),
   cameras: () => client.get<Camera[]>("/cameras").then((r) => r.data),
   addCamera: (name: string, url: string) => client.post<Camera>("/cameras", { name, url }).then((r) => r.data),

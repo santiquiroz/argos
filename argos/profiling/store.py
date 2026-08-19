@@ -106,6 +106,26 @@ class ProfileStore:
         )
         self._conn.commit()
 
+    def merge_persons(self, *, source: str, target: str) -> bool:
+        """Fold ``source`` into ``target``: reassign its data, adopt its name if target is unnamed,
+        then delete ``source``. Returns False if either id is unknown or they're the same."""
+        if source == target or self.person(source) is None or self.person(target) is None:
+            return False
+        for table in ("observations", "embeddings", "events"):
+            self._conn.execute(f"UPDATE {table} SET person_id = ? WHERE person_id = ?", (target, source))
+        src, tgt = self.person(source), self.person(target)
+        if not tgt["enrolled"] and src["enrolled"]:
+            self._conn.execute(
+                "UPDATE persons SET name = ?, enrolled = 1 WHERE id = ?", (src["name"], target)
+            )
+        self._conn.execute(
+            "UPDATE persons SET last_seen = MAX(last_seen, ?) WHERE id = ?", (src["last_seen"], target)
+        )
+        self._conn.execute("DELETE FROM persons WHERE id = ?", (source,))
+        self._conn.commit()
+        log.info("persons_merged", source=source, target=target)
+        return True
+
     def list_persons(self) -> list[dict]:
         rows = self._conn.execute(
             "SELECT id, name, enrolled, created_at, last_seen FROM persons ORDER BY last_seen DESC"

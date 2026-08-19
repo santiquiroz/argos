@@ -98,3 +98,20 @@ def test_person_detail_and_observation_queries():
     assert store.crop_path_for_observation("o1") == "/c/o1.jpg"
     assert store.crop_path_for_observation("o2") is None
     assert store.latest_crop_path(pid) == "/c/o1.jpg"  # o2 has no crop, falls back to o1
+
+
+def test_merge_persons_folds_source_into_target():
+    store = ProfileStore(":memory:")
+    a, b = store.create_person(), store.create_person()
+    store.add_observation(observation_id="o1", person_id=a, camera="c", track_id="t", ts=1.0, crop_path=None)
+    store.add_embedding(person_id=a, observation_id="o1", modality="reid", vector=_unit(1, 0, 0), ts=1.0)
+    store.enroll(a, "Alice")
+
+    assert store.merge_persons(source=a, target=b) is True
+    assert store.person(a) is None                       # source deleted
+    assert len(store.observations_for_person(b)) == 1     # observations reassigned
+    assert store.person(b)["name"] == "Alice"             # target adopts source's name
+    assert store.person(b)["enrolled"] == 1
+
+    assert store.merge_persons(source=a, target=b) is False  # source now gone
+    assert store.merge_persons(source=b, target=b) is False  # same id

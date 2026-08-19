@@ -15,6 +15,10 @@ class EnrollRequest(BaseModel):
     name: str = Field(min_length=1, max_length=100)
 
 
+class MergeRequest(BaseModel):
+    source_id: str = Field(min_length=1)
+
+
 @router.get("/persons")
 def list_persons(request: Request) -> list[dict]:
     return request.app.state.store.list_persons()
@@ -28,6 +32,13 @@ def enroll_person(person_id: str, body: EnrollRequest, request: Request) -> dict
         raise HTTPException(status_code=404, detail="person not found")
     store.enroll(person_id, body.name)
     return {"id": person_id, "name": body.name, "enrolled": True}
+
+
+@router.post("/persons/{target_id}/merge")
+def merge_person(target_id: str, body: MergeRequest, request: Request) -> dict:
+    if not request.app.state.store.merge_persons(source=body.source_id, target=target_id):
+        raise HTTPException(status_code=400, detail="unknown person(s) or same id")
+    return {"merged_into": target_id, "removed": body.source_id}
 
 
 @router.get("/persons/{person_id}/thumbnail")

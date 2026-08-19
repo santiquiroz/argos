@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Camera, Clock } from "lucide-react";
+import { ArrowLeft, Camera, Clock, GitMerge } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api, observationThumbUrl, personThumbUrl } from "../lib/api";
@@ -53,6 +53,8 @@ export function PersonDetail() {
         </div>
       </Card>
 
+      <MergeCard targetId={id} />
+
       <Card title="Timeline">
         {observations.length === 0 ? (
           <EmptyState>No observations recorded yet.</EmptyState>
@@ -75,5 +77,40 @@ export function PersonDetail() {
         )}
       </Card>
     </div>
+  );
+}
+
+function MergeCard({ targetId }: { targetId: string }) {
+  const qc = useQueryClient();
+  const persons = useQuery({ queryKey: ["persons"], queryFn: api.persons });
+  const [source, setSource] = useState("");
+  const merge = useMutation({
+    mutationFn: () => api.mergePerson(targetId, source),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["persons"] });
+      qc.invalidateQueries({ queryKey: ["person", targetId] });
+      setSource("");
+    },
+  });
+  const others = (persons.data ?? []).filter((p) => p.id !== targetId);
+  if (others.length === 0) return null;
+
+  return (
+    <Card title="Merge">
+      <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
+        Same person split into two? Fold another identity into this one (its observations move here).
+      </p>
+      <div className="row" style={{ gap: 10 }}>
+        <select className="input" style={{ maxWidth: 260 }} value={source} onChange={(e) => setSource(e.target.value)}>
+          <option value="">choose a person to merge in…</option>
+          {others.map((p) => (
+            <option key={p.id} value={p.id}>{p.name ?? `#${p.id.slice(0, 8)}`}</option>
+          ))}
+        </select>
+        <Button small onClick={() => merge.mutate()} disabled={!source || merge.isPending}>
+          <GitMerge size={14} strokeWidth={1.5} /> Merge in
+        </Button>
+      </div>
+    </Card>
   );
 }
