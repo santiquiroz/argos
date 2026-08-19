@@ -14,6 +14,7 @@ from argos.analyzers.base import Analyzer
 from argos.analyzers.face import FaceAnalyzer
 from argos.analyzers.pose import PoseAnalyzer
 from argos.analyzers.reid import ReidAnalyzer
+from argos.cameras import CameraStore
 from argos.config import Settings
 from argos.ingest.base import Ingestor
 from argos.ingest.frigate import FrigateIngestor
@@ -29,9 +30,10 @@ def resolve_model_path(models_dir: Path, name: str, *, prefer_fp16: bool) -> Pat
     return models_dir / f"{name}.onnx"
 
 
-def build_ingestor(settings: Settings) -> Ingestor:
+def build_ingestor(settings: Settings, cameras: CameraStore) -> Ingestor:
     if settings.ingest == "rtsp":
-        return RtspIngestor(settings, _build_detector(settings))
+        enabled = {c.name: c.url for c in cameras.list() if c.enabled}
+        return RtspIngestor(enabled, _build_detector(settings))
     return FrigateIngestor(settings)
 
 

@@ -1,80 +1,51 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { api, ArgosEvent } from "../lib/api";
+import { CheckCircle2, Circle } from "lucide-react";
+import { api } from "../lib/api";
+import { useLiveEvents } from "../lib/useLiveEvents";
+import { Card, Stat } from "../components/ui/Card";
+import { EventFeed } from "../components/EventFeed";
 
-// Minimal starter surface: health, analyzer availability, person count, and a live SSE event feed.
-// A fuller UI (person profiles, behaviour timeline, enrollment, camera view) is on the roadmap.
 export function Dashboard() {
   const health = useQuery({ queryKey: ["health"], queryFn: api.health, refetchInterval: 5000 });
+  const cameras = useQuery({ queryKey: ["cameras"], queryFn: api.cameras });
   const persons = useQuery({ queryKey: ["persons"], queryFn: api.persons, refetchInterval: 10000 });
-  const live = useLiveEvents();
+  const events = useLiveEvents();
+
+  const ready = health.data?.analyzers.filter((a) => a.available).length ?? 0;
+  const total = health.data?.analyzers.length ?? 0;
 
   return (
-    <main style={{ fontFamily: "system-ui, sans-serif", maxWidth: 820, margin: "2rem auto", padding: "0 1rem" }}>
-      <h1 style={{ letterSpacing: "-0.02em" }}>Argos</h1>
-      <p style={{ color: "#666", marginTop: "-0.5rem" }}>
-        Behavioural &amp; identity analytics — {health.data?.ingest ?? "…"} ingest on {health.data?.device ?? "…"}
-      </p>
+    <div className="stack">
+      <div className="grid grid--stats">
+        <Stat value={cameras.data?.length ?? "—"} label="Cameras" />
+        <Stat value={persons.data?.length ?? "—"} label="Persons seen" />
+        <Stat value={`${ready}/${total}`} label="Analyzers ready" />
+        <Stat value={health.data?.device ?? "—"} label="Inference device" />
+      </div>
 
-      <section style={card}>
-        <h2 style={h2}>Analyzers</h2>
-        <ul style={{ margin: 0, paddingLeft: "1.1rem" }}>
-          {health.data?.analyzers.map((a) => (
-            <li key={a.name}>
-              {a.name} — {a.available ? "✅ ready" : "⚪ model not downloaded"}
-            </li>
-          )) ?? <li>loading…</li>}
-        </ul>
-      </section>
-
-      <section style={card}>
-        <h2 style={h2}>Persons ({persons.data?.length ?? 0})</h2>
-        <ul style={{ margin: 0, paddingLeft: "1.1rem" }}>
-          {persons.data?.slice(0, 10).map((p) => (
-            <li key={p.id}>
-              {p.name ?? <em>#{p.id.slice(0, 8)} (unenrolled)</em>}
-            </li>
-          )) ?? <li>loading…</li>}
-        </ul>
-      </section>
-
-      <section style={card}>
-        <h2 style={h2}>Live events</h2>
-        {live.length === 0 ? (
-          <p style={{ color: "#999" }}>Waiting for events…</p>
-        ) : (
-          <ul style={{ margin: 0, paddingLeft: "1.1rem" }}>
-            {live.slice(0, 20).map((e) => (
-              <li key={e.id}>
-                <strong>{e.kind}</strong>
-                {e.label ? ` · ${e.label} (${(e.score ?? 0).toFixed(2)})` : ""}
-                {e.camera ? ` · ${e.camera}` : ""}
-              </li>
+      <div className="grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
+        <Card title="Analyzers">
+          <div className="stack" style={{ gap: 12 }}>
+            {(health.data?.analyzers ?? []).map((a) => (
+              <div className="row" key={a.name}>
+                {a.available ? (
+                  <CheckCircle2 size={18} strokeWidth={1.5} color="var(--color-live)" />
+                ) : (
+                  <Circle size={18} strokeWidth={1.5} color="var(--color-muted-foreground)" />
+                )}
+                <span style={{ textTransform: "capitalize" }}>{a.name}</span>
+                <span className="muted" style={{ marginLeft: "auto", fontSize: 13 }}>
+                  {a.available ? "ready" : "model not downloaded"}
+                </span>
+              </div>
             ))}
-          </ul>
-        )}
-      </section>
-    </main>
+          </div>
+        </Card>
+
+        <Card title="Live events">
+          <EventFeed events={events.slice(0, 8)} />
+        </Card>
+      </div>
+    </div>
   );
 }
-
-function useLiveEvents(): ArgosEvent[] {
-  const [events, setEvents] = useState<ArgosEvent[]>([]);
-  useEffect(() => {
-    const source = new EventSource("/api/events/stream");
-    const onMessage = (e: MessageEvent) => setEvents((prev) => [JSON.parse(e.data), ...prev]);
-    ["new_person", "recognized", "behavior"].forEach((kind) =>
-      source.addEventListener(kind, onMessage as EventListener),
-    );
-    return () => source.close();
-  }, []);
-  return events;
-}
-
-const card: React.CSSProperties = {
-  border: "1px solid #e5e5e5",
-  borderRadius: 12,
-  padding: "1rem 1.25rem",
-  marginTop: "1rem",
-};
-const h2: React.CSSProperties = { fontSize: "1rem", margin: "0 0 0.5rem" };

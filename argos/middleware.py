@@ -29,7 +29,8 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         if _is_public(request.url.path):
             return await call_next(request)
-        provided = request.headers.get("X-API-Key", "")
+        # <img> (MJPEG) and EventSource (SSE) cannot set headers, so also accept ?key=.
+        provided = request.headers.get("X-API-Key") or request.query_params.get("key", "")
         if not secrets.compare_digest(provided, self._api_key):
             return JSONResponse({"detail": "invalid or missing API key"}, status_code=401)
         return await call_next(request)

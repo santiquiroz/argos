@@ -1,13 +1,10 @@
 import axios from "axios";
 
-// One axios instance; the API key is stored client-side and injected on every request.
-// Pattern mirrors bipolar-code's services/api.ts.
 const KEY_STORAGE = "argos_api_key";
 
 export function getApiKey(): string {
   return localStorage.getItem(KEY_STORAGE) ?? "";
 }
-
 export function setApiKey(key: string): void {
   localStorage.setItem(KEY_STORAGE, key);
 }
@@ -26,14 +23,12 @@ export interface Health {
   pipeline_running: boolean;
   analyzers: { name: string; available: boolean }[];
 }
-
 export interface Person {
   id: string;
   name: string | null;
   enrolled: number;
   last_seen: number;
 }
-
 export interface ArgosEvent {
   id: string;
   person_id: string | null;
@@ -43,11 +38,48 @@ export interface ArgosEvent {
   score: number | null;
   ts: number;
 }
+export interface Camera {
+  name: string;
+  url: string;
+  enabled: boolean;
+}
+export interface DiscoveredCamera {
+  ip: string;
+  vendor: string;
+  model: string | null;
+  channels: number;
+  reachable_http: boolean;
+  reachable_rtsp: boolean;
+  insecure: boolean;
+  insecure_default_credential: string | null;
+  rtsp_urls: string[];
+}
+export interface SettingsSnapshot {
+  device: string;
+  ingest: string;
+  prefer_fp16: boolean;
+  frigate_url: string;
+  analyzers: Record<string, boolean>;
+  retention_days: Record<string, number>;
+}
 
 export const api = {
   health: () => client.get<Health>("/health").then((r) => r.data),
   persons: () => client.get<Person[]>("/persons").then((r) => r.data),
-  events: () => client.get<ArgosEvent[]>("/events").then((r) => r.data),
-  enroll: (id: string, name: string) =>
-    client.post(`/persons/${id}/enroll`, { name }).then((r) => r.data),
+  enroll: (id: string, name: string) => client.post(`/persons/${id}/enroll`, { name }).then((r) => r.data),
+  events: (limit = 100) => client.get<ArgosEvent[]>("/events", { params: { limit } }).then((r) => r.data),
+  cameras: () => client.get<Camera[]>("/cameras").then((r) => r.data),
+  addCamera: (name: string, url: string) => client.post<Camera>("/cameras", { name, url }).then((r) => r.data),
+  removeCamera: (name: string) => client.delete(`/cameras/${name}`).then((r) => r.data),
+  settings: () => client.get<SettingsSnapshot>("/settings").then((r) => r.data),
+  scan: (body: { subnet?: string | null; sweep: boolean; audit_credentials: boolean }) =>
+    client.post<DiscoveredCamera[]>("/discovery/scan", body).then((r) => r.data),
 };
+
+// <img>/EventSource can't set headers, so pass the key as a query param.
+export function mjpegUrl(camera: string): string {
+  return `/api/cameras/${encodeURIComponent(camera)}/stream.mjpeg?key=${encodeURIComponent(getApiKey())}`;
+}
+export function eventStreamUrl(): string {
+  return `/api/events/stream?key=${encodeURIComponent(getApiKey())}`;
+}

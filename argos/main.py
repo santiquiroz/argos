@@ -15,10 +15,12 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import FileResponse, Response
 
 from argos import __version__
 from argos.api import include_routers
+from argos.cameras import build_camera_store
 from argos.config import Settings, get_settings
 from argos.events import EventBus
 from argos.factory import build_action_analyzer, build_crop_analyzers, build_ingestor
@@ -47,9 +49,10 @@ async def lifespan(app: FastAPI):
     configure_logging()
     store = ProfileStore(settings.db_path())
     bus = EventBus()
+    cameras = build_camera_store(settings)
     crop_analyzers = build_crop_analyzers(settings)
     action_analyzer = build_action_analyzer(settings)
-    ingestor = build_ingestor(settings)
+    ingestor = build_ingestor(settings, cameras)
     pipeline = Pipeline(
         settings=settings,
         store=store,
@@ -61,6 +64,7 @@ async def lifespan(app: FastAPI):
     app.state.settings = settings
     app.state.store = store
     app.state.bus = bus
+    app.state.cameras = cameras
     app.state.crop_analyzers = crop_analyzers
     app.state.pipeline = pipeline
     app.state.pipeline_task = asyncio.create_task(pipeline.run())
@@ -85,10 +89,14 @@ def _mount_spa(app: FastAPI) -> None:
 
     class SPAStatic(StaticFiles):
         async def get_response(self, path: str, scope) -> Response:
-            response = await super().get_response(path, scope)
-            if response.status_code == 404:
-                return FileResponse(dist / "index.html")
-            return response
+            # StaticFiles raises 404 (not returns) when a path isn't a file; fall back to the SPA
+            # entrypoint so client-side routes resolve on hard refresh.
+            try:
+                return await super().get_response(path, scope)
+            except StarletteHTTPException as exc:
+                if exc.status_code == 404:
+                    return FileResponse(dist / "index.html")
+                raise
 
     app.mount("/", SPAStatic(directory=str(dist), html=True), name="spa")
 

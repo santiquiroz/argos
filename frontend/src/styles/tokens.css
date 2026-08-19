@@ -1,0 +1,71 @@
+/* SURUworks design tokens — Flat design, light default, full dark support.
+   Palette + type match the SURU design system so Argos slots into the SURU apps. */
+
+:root {
+  /* Color — light (SURU default) */
+  --color-primary: #0f172a;
+  --color-on-primary: #ffffff;
+  --color-secondary: #334155;
+  --color-accent: #0369a1;
+  --color-accent-hover: #0284c7;
+  --color-on-accent: #ffffff;
+  --color-background: #f8fafc;
+  --color-foreground: #020617;
+  --color-card: #ffffff;
+  --color-card-foreground: #020617;
+  --color-muted: #e8ecf1;
+  --color-muted-foreground: #64748b;
+  --color-border: #e2e8f0;
+  --color-destructive: #dc2626;
+  --color-ring: #0369a1;
+
+  /* Semantic status (surveillance console) */
+  --color-live: #059669;
+  --color-warning: #d97706;
+  --color-sidebar: #0f172a;
+  --color-sidebar-foreground: #cbd5e1;
+  --color-sidebar-active: #1e293b;
+
+  /* Type */
+  --font-heading: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "DM Sans", system-ui, sans-serif;
+
+  /* Radius (flat: 12 cards, 6 buttons, 8 standard) */
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-lg: 12px;
+
+  /* Spacing (8pt) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  --transition: 150ms ease-out;
+}
+
+:root[data-theme="dark"] {
+  --color-primary: #38bdf8;
+  --color-on-primary: #0f172a;
+  --color-secondary: #94a3b8;
+  --color-accent: #38bdf8;
+  --color-accent-hover: #7dd3fc;
+  --color-on-accent: #0f172a;
+  --color-background: #0f172a;
+  --color-foreground: #f8fafc;
+  --color-card: #1e293b;
+  --color-card-foreground: #f8fafc;
+  --color-muted: #1e293b;
+  --color-muted-foreground: #94a3b8;
+  --color-border: #334155;
+  --color-destructive: #f87171;
+  --color-ring: #38bdf8;
+  --color-live: #34d399;
+  --color-warning: #fbbf24;
+  --color-sidebar: #020617;
+  --color-sidebar-foreground: #cbd5e1;
+  --color-sidebar-active: #1e293b;
+}

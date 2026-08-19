@@ -23,7 +23,6 @@ from typing import Protocol
 
 import numpy as np
 
-from argos.config import Settings
 from argos.detect.tracker import IouTracker
 from argos.ingest.base import Ingestor, PersonObservation
 from argos.logging import get_logger
@@ -130,8 +129,8 @@ def _crop(frame: np.ndarray, box: tuple[int, int, int, int]) -> np.ndarray | Non
 
 
 class RtspIngestor(Ingestor):
-    def __init__(self, settings: Settings, detector: PersonDetector | None) -> None:
-        self._cameras = settings.rtsp_camera_map()
+    def __init__(self, cameras: dict[str, str], detector: PersonDetector | None) -> None:
+        self._cameras = cameras
         self._detector = detector
         self._sources: list[FfmpegRtspFrameSource] = []
         self._threads: list[threading.Thread] = []
