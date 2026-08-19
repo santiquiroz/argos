@@ -80,3 +80,21 @@ def test_fusion_gait_and_reid_agreement():
 
 def test_fusion_no_match_returns_none():
     assert _decide_person({}) is None
+
+
+def test_person_detail_and_observation_queries():
+    store = ProfileStore(":memory:")
+    pid = store.create_person()
+    store.add_observation(observation_id="o1", person_id=pid, camera="front", track_id="t", ts=100.0, crop_path="/c/o1.jpg")
+    store.add_observation(observation_id="o2", person_id=pid, camera="yard", track_id="t2", ts=200.0, crop_path=None)
+
+    assert store.person(pid)["id"] == pid
+    assert store.person("missing") is None
+
+    obs = store.observations_for_person(pid)
+    assert [o["id"] for o in obs] == ["o2", "o1"]  # newest first
+    assert {o["camera"] for o in obs} == {"front", "yard"}
+
+    assert store.crop_path_for_observation("o1") == "/c/o1.jpg"
+    assert store.crop_path_for_observation("o2") is None
+    assert store.latest_crop_path(pid) == "/c/o1.jpg"  # o2 has no crop, falls back to o1

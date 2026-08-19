@@ -120,6 +120,26 @@ class ProfileStore:
         ).fetchone()
         return row["crop_path"] if row else None
 
+    def person(self, person_id: str) -> dict | None:
+        row = self._conn.execute(
+            "SELECT id, name, enrolled, created_at, last_seen FROM persons WHERE id = ?",
+            (person_id,),
+        ).fetchone()
+        return dict(row) if row else None
+
+    def observations_for_person(self, person_id: str, limit: int = 60) -> list[dict]:
+        rows = self._conn.execute(
+            "SELECT id, camera, ts FROM observations WHERE person_id = ? ORDER BY ts DESC LIMIT ?",
+            (person_id, limit),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def crop_path_for_observation(self, observation_id: str) -> str | None:
+        row = self._conn.execute(
+            "SELECT crop_path FROM observations WHERE id = ?", (observation_id,)
+        ).fetchone()
+        return row["crop_path"] if row and row["crop_path"] else None
+
     # --- observations / embeddings ---
     def add_observation(self, *, observation_id: str, person_id: str | None, camera: str, track_id: str, ts: float, crop_path: str | None) -> None:
         self._conn.execute(

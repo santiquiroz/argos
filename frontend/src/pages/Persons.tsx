@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { UserRound } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { api, Person, personThumbUrl } from "../lib/api";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
@@ -60,10 +61,10 @@ function PersonRow({ person }: { person: Person }) {
   return (
     <tr>
       <td>
-        <div className="row">
+        <Link to={`/persons/${person.id}`} className="row" style={{ color: "inherit" }}>
           <PersonAvatar id={person.id} />
           {person.name ?? <span className="muted">#{person.id.slice(0, 8)}</span>}
-        </div>
+        </Link>
       </td>
       <td>
         {person.enrolled ? <Badge variant="live">enrolled</Badge> : <Badge>anonymous</Badge>}

@@ -8,6 +8,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { Discovery } from "./pages/Discovery";
 import { Events } from "./pages/Events";
 import { Live } from "./pages/Live";
+import { PersonDetail } from "./pages/PersonDetail";
 import { Persons } from "./pages/Persons";
 import { Settings } from "./pages/Settings";
 import { applyTheme, getTheme } from "./lib/theme";
@@ -28,6 +29,7 @@ const router = createBrowserRouter([
       { path: "live", element: <Live /> },
       { path: "discovery", element: <Discovery /> },
       { path: "persons", element: <Persons /> },
+      { path: "persons/:id", element: <PersonDetail /> },
       { path: "events", element: <Events /> },
       { path: "settings", element: <Settings /> },
       { path: "*", element: <Navigate to="/" replace /> },

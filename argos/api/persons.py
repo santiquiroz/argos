@@ -36,3 +36,25 @@ def person_thumbnail(person_id: str, request: Request) -> FileResponse:
     if path is None or not Path(path).is_file():
         raise HTTPException(status_code=404, detail="no thumbnail")
     return FileResponse(path, media_type="image/jpeg")
+
+
+@router.get("/persons/{person_id}")
+def get_person(person_id: str, request: Request) -> dict:
+    store = request.app.state.store
+    person = store.person(person_id)
+    if person is None:
+        raise HTTPException(status_code=404, detail="person not found")
+    observations = store.observations_for_person(person_id)
+    return {
+        "person": person,
+        "observations": observations,
+        "cameras": sorted({o["camera"] for o in observations}),
+    }
+
+
+@router.get("/observations/{observation_id}/thumbnail")
+def observation_thumbnail(observation_id: str, request: Request) -> FileResponse:
+    path = request.app.state.store.crop_path_for_observation(observation_id)
+    if path is None or not Path(path).is_file():
+        raise HTTPException(status_code=404, detail="no thumbnail")
+    return FileResponse(path, media_type="image/jpeg")

@@ -76,11 +76,26 @@ export const api = {
   scan: (body: { subnet?: string | null; sweep: boolean; audit_credentials: boolean }) =>
     client.post<DiscoveredCamera[]>("/discovery/scan", body).then((r) => r.data),
   notifyTest: () => client.post("/notify/test").then((r) => r.data),
+  person: (id: string) => client.get<PersonDetail>(`/persons/${id}`).then((r) => r.data),
 };
+
+export interface Observation {
+  id: string;
+  camera: string;
+  ts: number;
+}
+export interface PersonDetail {
+  person: Person;
+  observations: Observation[];
+  cameras: string[];
+}
 
 // Latest crop thumbnail for a person (<img>, so key goes in the query string).
 export function personThumbUrl(id: string): string {
   return `/api/persons/${encodeURIComponent(id)}/thumbnail?key=${encodeURIComponent(getApiKey())}`;
+}
+export function observationThumbUrl(id: string): string {
+  return `/api/observations/${encodeURIComponent(id)}/thumbnail?key=${encodeURIComponent(getApiKey())}`;
 }
 
 // <img>/EventSource can't set headers, so pass the key as a query param.
