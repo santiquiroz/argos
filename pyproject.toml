@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "argos-vision"
+version = "0.1.0"
+description = "Local-first behavioural & identity analytics layer for your own security cameras (Frigate/HiLook RTSP), on AMD GPU via ONNX Runtime + DirectML."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "AGPL-3.0-or-later" }
+authors = [{ name = "Santiago Quiroz" }]
+keywords = ["computer-vision", "surveillance", "reid", "gait", "pose", "action-recognition", "onnx", "directml", "frigate"]
+
+dependencies = [
+    "fastapi>=0.111",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "structlog>=24.1",
+    "numpy>=1.26",
+    "opencv-python-headless>=4.9",
+    "pillow>=10.3",
+    "onnx>=1.16",
+    "httpx>=0.27",
+    "paho-mqtt>=2.1",
+    "pyyaml>=6.0",
+    "sse-starlette>=2.1",
+]
+
+[project.optional-dependencies]
+# AMD GPU inference (Windows). CPU EP works without this but is slow.
+directml = ["onnxruntime-directml>=1.18,<2.0; sys_platform=='win32'"]
+# Portable CPU/other-GPU fallback.
+cpu = ["onnxruntime>=1.18,<2.0"]
+dev = [
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.5",
+]
+
+[project.scripts]
+argos = "argos.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/santiquiroz/argos"
+
+[tool.setuptools.packages.find]
+include = ["argos*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"

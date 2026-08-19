@@ -1,0 +1,51 @@
+# Example stack: MQTT broker + Frigate (ingest/detection) + Argos (analytics).
+#
+# NOTE ON GPU: Argos' AMD/DirectML inference is Windows-native and cannot run inside a Linux
+# container. Two supported topologies:
+#   1. Run Frigate + mosquitto in Docker (this file) and run Argos NATIVELY on Windows
+#      (`python -m argos`), pointing it at the containerized MQTT/Frigate. Best performance.
+#   2. Run everything in Docker with Argos on the CPU execution provider (ARGOS_DEVICE=cpu) — slower.
+#
+# This compose shows topology 2. For topology 1, start only `mosquitto` and `frigate` here.
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    command: mosquitto -c /mosquitto-no-auth.conf
+    ports:
+      - "1883:1883"
+    restart: unless-stopped
+
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:stable
+    shm_size: "256mb"
+    ports:
+      - "5000:5000"
+      - "8554:8554" # RTSP restream
+    volumes:
+      - ./frigate/config.yml:/config/config.yml:ro
+      - ./frigate/media:/media/frigate
+    depends_on:
+      - mosquitto
+    restart: unless-stopped
+    # Point Frigate's cameras at your HiLook DVR sub-streams in frigate/config.yml, e.g.:
+    #   rtsp://user:pass@dvr.lan:554/Streaming/Channels/102
+
+  argos:
+    build: .
+    environment:
+      ARGOS_DEVICE: cpu # DirectML/AMD GPU is Windows-native; container is CPU-only
+      ARGOS_INGEST: frigate
+      ARGOS_FRIGATE_URL: http://frigate:5000
+      ARGOS_MQTT_HOST: mosquitto
+      ARGOS_MQTT_PORT: "1883"
+      ARGOS_CORS_ORIGINS: http://localhost:8080
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+      - ./models/weights:/app/models/weights
+    depends_on:
+      - mosquitto
+      - frigate
+    restart: unless-stopped

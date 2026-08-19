@@ -1,0 +1,56 @@
+# Model catalog for scripts/download_models.py.
+# Each entry: task -> {file, url, sha256, license, size_mb, notes}.
+# url: null means the model must be exported/obtained manually (see notes) — many CV models
+# ship as PyTorch checkpoints and need a one-time ONNX export. Fill `url`/`sha256` with your own
+# verified artifact if you host one. READ the license before use.
+
+models:
+  pose:
+    file: pose.onnx
+    url: null
+    sha256: null
+    license: Apache-2.0 (RTMPose / mmpose)
+    size_mb: 30
+    notes: >
+      RTMPose-m body (17 keypoints). Export from mmpose/mmdeploy to ONNX (SimCC head, opset >= 12),
+      input 192x256. The PoseAnalyzer decode matches the SimCC output layout.
+
+  reid:
+    file: reid.onnx
+    url: null
+    sha256: null
+    license: Apache-2.0 (torchreid / FastReID)
+    size_mb: 40
+    notes: >
+      OSNet (osnet_x1_0) appearance embedding, input 128x256, ImageNet norm. Export from
+      KaiyangZhou/deep-person-reid or a FastReID model to ONNX.
+
+  face:
+    file: face.onnx
+    url: null
+    sha256: null
+    license: InsightFace models are NON-COMMERCIAL / research only — verify before any commercial use
+    size_mb: 250
+    notes: >
+      InsightFace ArcFace (buffalo_l recognition model, w600k_r50), 512-d embedding, input 112x112.
+      For accuracy, add a RetinaFace/SCRFD detector + 5-point aligner upstream (Phase 2).
+
+  action:
+    file: action.onnx
+    url: null
+    sha256: null
+    license: model-specific (check the checkpoint you export from)
+    size_mb: 15
+    notes: >
+      ST-GCN / CTR-GCN on pose windows. NTU-trained checkpoints must be relabelled/retrained for a
+      security action set. Export with opset >= 12 (einsum, 5-D tensors). Input (1,3,T,V,1).
+
+  gait:
+    file: gait.onnx
+    url: null
+    sha256: null
+    license: OpenGait license (research)
+    size_mb: 30
+    notes: >
+      OpenGait GaitBase (silhouette). EXPERIMENTAL. Also needs a person-segmentation model to
+      produce silhouettes. ONNX export is non-trivial (5-D tensors, einsum). Input (1,T,64,64).

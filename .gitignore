@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+
+# Argos runtime data (crops, embeddings db, logs) — never commit footage or biometrics
+data/
+models/weights/
+*.db
+*.sqlite
+*.log
+
+# Env / secrets
+.env
+.env.local
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
