@@ -27,4 +27,9 @@ def get_settings_snapshot(request: Request) -> dict:
             "embeddings": s.retain_embeddings_days,
             "events": s.retain_events_days,
         },
+        "notifications": {
+            "enabled": bool(s.notify_webhook_url),
+            "notify_on": s.notify_on,
+            "cooldown_s": s.notify_cooldown_s,
+        },
     }

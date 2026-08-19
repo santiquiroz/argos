@@ -26,8 +26,10 @@ from argos.events import EventBus
 from argos.factory import build_action_analyzer, build_crop_analyzers, build_ingestor
 from argos.logging import configure_logging, get_logger
 from argos.middleware import APIKeyMiddleware
+from argos.notify import build_notifier
 from argos.pipeline import Pipeline
 from argos.profiling.store import ProfileStore
+from argos.retention import purge_crop_files
 
 log = get_logger(__name__)
 
@@ -40,6 +42,9 @@ async def _retention_loop(store: ProfileStore, settings: Settings) -> None:
             embeddings_days=settings.retain_embeddings_days,
             events_days=settings.retain_events_days,
         )
+        removed = purge_crop_files(settings.crops_dir(), settings.retain_crops_days)
+        if removed:
+            log.info("crops_purged", removed=removed, retain_days=settings.retain_crops_days)
         await asyncio.sleep(_RETENTION_INTERVAL_S)
 
 
@@ -53,6 +58,7 @@ async def lifespan(app: FastAPI):
     crop_analyzers = build_crop_analyzers(settings)
     action_analyzer = build_action_analyzer(settings)
     ingestor = build_ingestor(settings, cameras)
+    notifier = build_notifier(settings.notify_webhook_url, settings.notify_on, settings.notify_cooldown_s)
     pipeline = Pipeline(
         settings=settings,
         store=store,
@@ -60,11 +66,13 @@ async def lifespan(app: FastAPI):
         ingestor=ingestor,
         crop_analyzers=crop_analyzers,
         action_analyzer=action_analyzer,
+        notifier=notifier,
     )
     app.state.settings = settings
     app.state.store = store
     app.state.bus = bus
     app.state.cameras = cameras
+    app.state.notifier = notifier
     app.state.crop_analyzers = crop_analyzers
     app.state.pipeline = pipeline
     app.state.pipeline_task = asyncio.create_task(pipeline.run())

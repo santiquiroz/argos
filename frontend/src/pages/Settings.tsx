@@ -1,9 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
-import { LogOut } from "lucide-react";
-import { api } from "../lib/api";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Bell, LogOut, Send } from "lucide-react";
+import { useState } from "react";
+import { api, SettingsSnapshot } from "../lib/api";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
-import { Spinner } from "../components/ui/Feedback";
+import { Badge, Spinner } from "../components/ui/Feedback";
 
 export function Settings() {
   const settings = useQuery({ queryKey: ["settings"], queryFn: api.settings });
@@ -40,6 +41,8 @@ export function Settings() {
         </p>
       </Card>
 
+      <NotificationsCard settings={s} />
+
       <Card title="Session">
         <p className="muted" style={{ marginTop: 0 }}>Forget the stored API key on this browser.</p>
         <Button variant="secondary" onClick={disconnect}>
@@ -47,6 +50,37 @@ export function Settings() {
         </Button>
       </Card>
     </div>
+  );
+}
+
+function NotificationsCard({ settings }: { settings: SettingsSnapshot }) {
+  const n = settings.notifications;
+  const [result, setResult] = useState<string | null>(null);
+  const test = useMutation({
+    mutationFn: api.notifyTest,
+    onSuccess: () => setResult("sent"),
+    onError: () => setResult("failed"),
+  });
+
+  return (
+    <Card title="Notifications">
+      <div className="between" style={{ padding: "8px 0", borderBottom: "1px solid var(--color-border)" }}>
+        <span className="muted"><Bell size={15} strokeWidth={1.5} /> Webhook</span>
+        {n.enabled ? <Badge variant="live">configured</Badge> : <Badge>not set</Badge>}
+      </div>
+      <Row label="Notify on" value={n.notify_on} />
+      <Row label="Cooldown" value={`${n.cooldown_s}s`} />
+      <div className="row" style={{ marginTop: 12 }}>
+        <Button small onClick={() => test.mutate()} disabled={!n.enabled || test.isPending}>
+          <Send size={14} strokeWidth={1.5} /> {test.isPending ? "Sending…" : "Send test"}
+        </Button>
+        {result && <span className="muted">{result === "sent" ? "✓ sent" : "✗ failed — check the URL"}</span>}
+      </div>
+      <p className="muted" style={{ fontSize: 13, marginBottom: 0, marginTop: 12 }}>
+        Set <code>ARGOS_NOTIFY_WEBHOOK_URL</code> (ntfy / Home Assistant / Discord / Telegram) in{" "}
+        <code>.env</code>, then restart.
+      </p>
+    </Card>
   );
 }
 

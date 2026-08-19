@@ -460,3 +460,19 @@ a {
   max-width: 420px;
   margin: 12vh auto;
 }
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius);
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  background: var(--color-muted);
+  flex: none;
+}
+
+.avatar--empty {
+  display: inline-grid;
+  place-items: center;
+  color: var(--color-muted-foreground);
+}

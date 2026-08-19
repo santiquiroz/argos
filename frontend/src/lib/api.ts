@@ -61,6 +61,7 @@ export interface SettingsSnapshot {
   frigate_url: string;
   analyzers: Record<string, boolean>;
   retention_days: Record<string, number>;
+  notifications: { enabled: boolean; notify_on: string; cooldown_s: number };
 }
 
 export const api = {
@@ -74,7 +75,13 @@ export const api = {
   settings: () => client.get<SettingsSnapshot>("/settings").then((r) => r.data),
   scan: (body: { subnet?: string | null; sweep: boolean; audit_credentials: boolean }) =>
     client.post<DiscoveredCamera[]>("/discovery/scan", body).then((r) => r.data),
+  notifyTest: () => client.post("/notify/test").then((r) => r.data),
 };
+
+// Latest crop thumbnail for a person (<img>, so key goes in the query string).
+export function personThumbUrl(id: string): string {
+  return `/api/persons/${encodeURIComponent(id)}/thumbnail?key=${encodeURIComponent(getApiKey())}`;
+}
 
 // <img>/EventSource can't set headers, so pass the key as a query param.
 export function mjpegUrl(camera: string): string {

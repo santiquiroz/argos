@@ -44,6 +44,15 @@ Legend: ✅ implemented · 🟡 scaffolded (interface + wiring, model/impl pendi
 - ⏳ Enrollment flow (opt-in, name a cluster)
 - ⏳ Retention / privacy settings surface
 
+## Phase 4.5 — Alerting & polish
+- ✅ Notifications: generic JSON webhook (ntfy / Home Assistant / Discord / Telegram / Slack)
+- ✅ Alert filtering by event kind + per-subject cooldown (fights alert fatigue) + test endpoint
+- ✅ Person thumbnails in the UI (latest crop per person)
+- ✅ Crop-file retention enforced (PRIVACY.md promise) via the retention loop
+- ⏳ Zones / virtual tripwires per camera (alert only inside a region) — next wave
+- ⏳ Person detail page (cross-camera observation timeline)
+- ⏳ Edit analyzer toggles / retention / notify from the UI (persisted)
+
 ## Phase 5 — Packaging
 - ⏳ PyInstaller single-binary (backend serves built React SPA) — reuse bipolar-code spec
 - ⏳ `docker-compose` bundling Frigate + MQTT + Argos

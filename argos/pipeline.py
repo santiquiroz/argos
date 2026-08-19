@@ -19,6 +19,7 @@ from argos.core.devices import AdmissionGate, make_probe
 from argos.events import EventBus
 from argos.ingest.base import Ingestor, PersonObservation
 from argos.logging import get_logger
+from argos.notify import Notifier
 from argos.profiling.identity import IdentityResolver
 from argos.profiling.store import ProfileStore
 
@@ -39,6 +40,7 @@ class Pipeline:
         ingestor: Ingestor,
         crop_analyzers: list[Analyzer],
         action_analyzer: ActionAnalyzer | None = None,
+        notifier: Notifier | None = None,
     ) -> None:
         self._settings = settings
         self._store = store
@@ -46,6 +48,7 @@ class Pipeline:
         self._ingestor = ingestor
         self._crop_analyzers = crop_analyzers
         self._action_analyzer = action_analyzer
+        self._notifier = notifier
         self._resolver = IdentityResolver(store)
         self._gate = AdmissionGate(
             concurrency=settings.gpu_concurrency,
@@ -70,6 +73,8 @@ class Pipeline:
     async def stop(self) -> None:
         self._stopped = True
         await self._ingestor.close()
+        if self._notifier is not None:
+            await self._notifier.close()
 
     async def _process(self, obs: PersonObservation) -> None:
         async with self._gate:
@@ -128,7 +133,7 @@ class Pipeline:
         event = self._store.add_event(
             person_id=decision.person_id, camera=obs.camera, kind=kind, label=None, score=None
         )
-        self._bus.publish(event)
+        self._publish(event)
 
     async def _maybe_emit_behavior(self, obs: PersonObservation, person_id: str) -> None:
         if self._action_analyzer is None or not self._action_analyzer.available:
@@ -144,5 +149,10 @@ class Pipeline:
         event = self._store.add_event(
             person_id=person_id, camera=obs.camera, kind="behavior", label=result.label, score=result.score
         )
-        self._bus.publish(event)
+        self._publish(event)
         log.info("behavior_detected", label=result.label, score=round(result.score, 3), camera=obs.camera)
+
+    def _publish(self, event: dict) -> None:
+        self._bus.publish(event)
+        if self._notifier is not None:
+            self._notifier.dispatch(event)

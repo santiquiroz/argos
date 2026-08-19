@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { UserRound } from "lucide-react";
 import { useState } from "react";
-import { api, Person } from "../lib/api";
+import { api, Person, personThumbUrl } from "../lib/api";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Badge, EmptyState, Spinner } from "../components/ui/Feedback";
@@ -37,6 +37,18 @@ export function Persons() {
   );
 }
 
+function PersonAvatar({ id }: { id: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <span className="avatar avatar--empty">
+        <UserRound size={18} strokeWidth={1.5} />
+      </span>
+    );
+  }
+  return <img className="avatar" src={personThumbUrl(id)} alt="" onError={() => setFailed(true)} />;
+}
+
 function PersonRow({ person }: { person: Person }) {
   const qc = useQueryClient();
   const [name, setName] = useState("");
@@ -49,7 +61,7 @@ function PersonRow({ person }: { person: Person }) {
     <tr>
       <td>
         <div className="row">
-          <UserRound size={18} strokeWidth={1.5} color="var(--color-muted-foreground)" />
+          <PersonAvatar id={person.id} />
           {person.name ?? <span className="muted">#{person.id.slice(0, 8)}</span>}
         </div>
       </td>

@@ -112,6 +112,14 @@ class ProfileStore:
         ).fetchall()
         return [dict(r) for r in rows]
 
+    def latest_crop_path(self, person_id: str) -> str | None:
+        row = self._conn.execute(
+            "SELECT crop_path FROM observations WHERE person_id = ? AND crop_path IS NOT NULL "
+            "ORDER BY ts DESC LIMIT 1",
+            (person_id,),
+        ).fetchone()
+        return row["crop_path"] if row else None
+
     # --- observations / embeddings ---
     def add_observation(self, *, observation_id: str, person_id: str | None, camera: str, track_id: str, ts: float, crop_path: str | None) -> None:
         self._conn.execute(

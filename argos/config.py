@@ -63,6 +63,11 @@ class Settings(BaseSettings):
     enable_reid: bool = True
     enable_gait: bool = False
 
+    # Notifications (generic JSON webhook: ntfy / Home Assistant / Discord / Telegram-bot / Slack)
+    notify_webhook_url: str = ""
+    notify_on: str = "behavior,new_person"  # comma-separated event kinds
+    notify_cooldown_s: int = 300  # suppress repeats for the same subject within this window
+
     # Retention (days)
     retain_crops_days: int = 14
     retain_embeddings_days: int = 30

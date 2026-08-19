@@ -6,6 +6,7 @@ from argos.api.cameras import router as cameras_router
 from argos.api.discovery import router as discovery_router
 from argos.api.events import router as events_router
 from argos.api.health import router as health_router
+from argos.api.notify import router as notify_router
 from argos.api.persons import router as persons_router
 from argos.api.settings import router as settings_router
 
@@ -18,5 +19,6 @@ def include_routers(app: FastAPI) -> None:
         discovery_router,
         cameras_router,
         settings_router,
+        notify_router,
     ):
         app.include_router(router, prefix="/api")
