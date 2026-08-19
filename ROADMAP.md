@@ -10,11 +10,17 @@ Legend: ✅ implemented · 🟡 scaffolded (interface + wiring, model/impl pendi
 - 🟡 VRAM admission control (DXGI probe) — port from Upflow `device_semaphores`/`resource_probes`
 
 ## Phase 1 — Ingest
-- 🟡 `PersonObservation` dataclasses + `Ingestor` interface
-- 🟡 `FrigateIngestor` — MQTT `frigate/events` consumer + snapshot fetch
-- 🟡 `RtspIngestor` — ffmpeg raw-pipe RTSP source with reconnect/backoff/frame-drop
-- ⏳ Built-in person detector for the direct-RTSP path (YOLO-class ONNX)
-- ⏳ Lightweight tracker (ByteTrack-style) for the direct path
+- ✅ `PersonObservation` dataclasses + `Ingestor` interface
+- ✅ `FrigateIngestor` — MQTT `frigate/events` consumer + snapshot fetch
+- ✅ `RtspIngestor` — ffmpeg raw-pipe RTSP source with reconnect/backoff/frame-drop, per-camera threads
+- ✅ Built-in YOLO person detector (ONNX) for the direct-RTSP path + `scripts/export_yolo.py`
+- ✅ Lightweight IoU tracker for stable per-camera track ids
+
+## Phase 1.5 — Onboarding / discovery
+- ✅ ONVIF WS-Discovery + LAN sweep to find cameras/DVRs
+- ✅ Default-credential self-audit (ISAPI HTTP Digest) → flags insecure devices
+- ✅ Auto-built RTSP URLs; CLI (`scripts/discover_cameras.py`) + `POST /api/discovery/scan`
+- ✅ RTSP connectivity tester (`scripts/test_camera.py`)
 
 ## Phase 2 — Analyzers (order = signal-to-effort)
 - 🟡 `Analyzer` interface + pure pre/post-processing helpers

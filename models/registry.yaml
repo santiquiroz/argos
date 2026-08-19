@@ -5,6 +5,17 @@
 # verified artifact if you host one. READ the license before use.
 
 models:
+  detector:
+    file: detector.onnx
+    url: null
+    sha256: null
+    license: AGPL-3.0 (Ultralytics YOLO) — verify for your use
+    size_mb: 12
+    notes: >
+      Person detector for the direct-RTSP path (ARGOS_INGEST=rtsp). Export a YOLO model to ONNX with
+      scripts/export_yolo.py (default yolov8n, input 640, opset 12). The decoder expects the
+      Ultralytics layout (1, 84, 8400) and keeps class 0 (person). Not needed on the Frigate path.
+
   pose:
     file: pose.onnx
     url: null

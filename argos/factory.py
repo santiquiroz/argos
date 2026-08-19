@@ -31,8 +31,15 @@ def resolve_model_path(models_dir: Path, name: str, *, prefer_fp16: bool) -> Pat
 
 def build_ingestor(settings: Settings) -> Ingestor:
     if settings.ingest == "rtsp":
-        return RtspIngestor(settings)
+        return RtspIngestor(settings, _build_detector(settings))
     return FrigateIngestor(settings)
+
+
+def _build_detector(settings: Settings):
+    from argos.detect.yolo import YoloPersonDetector
+
+    path = resolve_model_path(settings.models_dir, "detector", prefer_fp16=settings.prefer_fp16)
+    return YoloPersonDetector(path, settings.device)
 
 
 def build_crop_analyzers(settings: Settings) -> list[Analyzer]:

@@ -111,6 +111,32 @@ python scripts/download_models.py pose face
 
 ---
 
+## Run it with your HiLook DVR (direct path, no Frigate)
+
+```bash
+# 0. install ffmpeg (RTSP decode) and the deps
+winget install Gyan.FFmpeg              # Windows
+pip install -e ".[dev,directml]"
+
+# 1. discover cameras on your LAN + audit default passwords → get RTSP URLs
+python scripts/discover_cameras.py
+#    (or test one stream directly:)
+python scripts/test_camera.py "rtsp://admin:PASS@192.168.1.10:554/Streaming/Channels/102"
+
+# 2. export a person detector to ONNX (one-time)
+pip install ultralytics
+python scripts/export_yolo.py           # → models/weights/detector.onnx
+
+# 3. point Argos at the DVR and run
+#    in .env:
+#      ARGOS_INGEST=rtsp
+#      ARGOS_RTSP_CAMERAS=front=rtsp://admin:PASS@192.168.1.10:554/Streaming/Channels/102
+python -m argos                         # http://localhost:8080  (dashboard shows live person events)
+```
+
+Downloading the pose/re-ID/face models (`python scripts/download_models.py`) lights up the
+higher-order analytics (identity, behaviour) on top of person detection.
+
 ## Requirements
 
 - **Windows 11** with an **AMD GPU** (RX 7800 XT class or better) for the DirectML inference path.
