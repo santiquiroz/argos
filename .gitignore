@@ -29,3 +29,7 @@ frontend/dist/
 Thumbs.db
 .idea/
 .vscode/
+
+# Release artifacts
+release/
+*.egg-link

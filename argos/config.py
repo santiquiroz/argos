@@ -5,12 +5,22 @@ Pattern mirrors bipolar-code's ``core/config.py``: pydantic-settings + a cached 
 
 from __future__ import annotations
 
+import os
 import secrets
+import sys
 from functools import lru_cache
 from pathlib import Path
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _default_base() -> Path:
+    """Writable base dir. Under a PyInstaller build, Program Files isn't writable — use LOCALAPPDATA."""
+    if getattr(sys, "frozen", False):
+        root = os.environ.get("LOCALAPPDATA") or os.path.expanduser("~")
+        return Path(root) / "Argos"
+    return Path(".")
 
 
 class Settings(BaseSettings):
@@ -28,8 +38,8 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173"
 
     # Storage
-    data_dir: Path = Path("./data")
-    models_dir: Path = Path("./models/weights")
+    data_dir: Path = Field(default_factory=lambda: _default_base() / "data")
+    models_dir: Path = Field(default_factory=lambda: _default_base() / "models" / "weights")
 
     # Inference
     device: str = "dml:0"  # "dml:N" | "cpu"
