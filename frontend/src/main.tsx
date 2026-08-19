@@ -11,6 +11,7 @@ import { Live } from "./pages/Live";
 import { PersonDetail } from "./pages/PersonDetail";
 import { Persons } from "./pages/Persons";
 import { Settings } from "./pages/Settings";
+import { Zones } from "./pages/Zones";
 import { applyTheme, getTheme } from "./lib/theme";
 import "./styles/global.css";
 
@@ -27,6 +28,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Dashboard /> },
       { path: "live", element: <Live /> },
+      { path: "zones", element: <Zones /> },
       { path: "discovery", element: <Discovery /> },
       { path: "persons", element: <Persons /> },
       { path: "persons/:id", element: <PersonDetail /> },

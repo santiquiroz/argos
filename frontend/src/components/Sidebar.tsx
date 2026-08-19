@@ -1,9 +1,10 @@
-import { Aperture, Bell, LayoutDashboard, Radar, Settings, Users, Video } from "lucide-react";
+import { Aperture, Bell, LayoutDashboard, Radar, Settings, Shapes, Users, Video } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 const LINKS = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/live", label: "Live", icon: Video },
+  { to: "/zones", label: "Zones", icon: Shapes },
   { to: "/discovery", label: "Discovery", icon: Radar },
   { to: "/persons", label: "Persons", icon: Users },
   { to: "/events", label: "Events", icon: Bell },

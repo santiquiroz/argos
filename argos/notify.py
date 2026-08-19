@@ -57,6 +57,8 @@ def format_message(event: dict) -> tuple[str, str]:
     if kind == "behavior":
         pct = int((event.get("score") or 0) * 100)
         return (f"Argos: {event.get('label', 'behaviour')} detected", f"{event.get('label')} ({pct}%) on {camera}")
+    if kind == "zone":
+        return (f"Argos: zone entry — {event.get('label')}", f"Someone entered '{event.get('label')}' on {camera}")
     if kind == "new_person":
         return ("Argos: new person", f"A new person was seen on {camera}")
     if kind == "recognized":

@@ -50,7 +50,9 @@ Legend: ✅ implemented · 🟡 scaffolded (interface + wiring, model/impl pendi
 - ✅ Person thumbnails in the UI (latest crop per person)
 - ✅ Crop-file retention enforced (PRIVACY.md promise) via the retention loop
 - ✅ Person detail page (cross-camera observation timeline with crop thumbnails)
-- ⏳ Zones / virtual tripwires per camera (alert only inside a region) — next wave
+- ✅ Zones per camera (normalized polygons): **alert** = tripwire event, **ignore** = noise mask;
+  SVG polygon editor over the live view. Works on the direct-RTSP path (Frigate path pending
+  box-format verification).
 - ⏳ Edit analyzer toggles / retention / notify from the UI (persisted)
 
 ## Phase 5 — Packaging

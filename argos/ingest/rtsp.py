@@ -189,6 +189,7 @@ class RtspIngestor(Ingestor):
             crop=crop,
             box=box,
             frame=frame,
+            frame_size=(frame.shape[1], frame.shape[0]),
         )
         self._loop.call_soon_threadsafe(self._enqueue, obs)
 

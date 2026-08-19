@@ -31,6 +31,7 @@ class PersonObservation:
     observation_id: str = field(default_factory=lambda: uuid.uuid4().hex)
     box: tuple[int, int, int, int] | None = None  # x1, y1, x2, y2 in the full frame
     frame: np.ndarray | None = None
+    frame_size: tuple[int, int] | None = None  # (w, h) of the full frame — needed for zones
     label: str = "person"
     score: float | None = None
 

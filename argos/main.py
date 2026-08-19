@@ -30,6 +30,7 @@ from argos.notify import build_notifier
 from argos.pipeline import Pipeline
 from argos.profiling.store import ProfileStore
 from argos.retention import purge_crop_files
+from argos.zones import build_zone_store
 
 log = get_logger(__name__)
 
@@ -55,6 +56,7 @@ async def lifespan(app: FastAPI):
     store = ProfileStore(settings.db_path())
     bus = EventBus()
     cameras = build_camera_store(settings)
+    zones = build_zone_store(settings.data_dir)
     crop_analyzers = build_crop_analyzers(settings)
     action_analyzer = build_action_analyzer(settings)
     ingestor = build_ingestor(settings, cameras)
@@ -67,11 +69,13 @@ async def lifespan(app: FastAPI):
         crop_analyzers=crop_analyzers,
         action_analyzer=action_analyzer,
         notifier=notifier,
+        zone_store=zones,
     )
     app.state.settings = settings
     app.state.store = store
     app.state.bus = bus
     app.state.cameras = cameras
+    app.state.zones = zones
     app.state.notifier = notifier
     app.state.crop_analyzers = crop_analyzers
     app.state.pipeline = pipeline

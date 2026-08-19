@@ -7,6 +7,7 @@ flags, persists observations/embeddings, and publishes events to the bus for the
 from __future__ import annotations
 
 import asyncio
+import time
 from collections import defaultdict, deque
 
 import cv2
@@ -22,12 +23,14 @@ from argos.logging import get_logger
 from argos.notify import Notifier
 from argos.profiling.identity import IdentityResolver
 from argos.profiling.store import ProfileStore
+from argos.zones import ZoneStore, foot_point_normalized
 
 log = get_logger(__name__)
 
 _POSE_WINDOW = 30
 _ACTION_MIN_SCORE = 0.6
 _BEHAVIOR_LABELS = {"falling", "running", "loitering", "climbing", "fighting"}
+_ZONE_COOLDOWN_S = 30.0
 
 
 class Pipeline:
@@ -41,6 +44,7 @@ class Pipeline:
         crop_analyzers: list[Analyzer],
         action_analyzer: ActionAnalyzer | None = None,
         notifier: Notifier | None = None,
+        zone_store: ZoneStore | None = None,
     ) -> None:
         self._settings = settings
         self._store = store
@@ -49,6 +53,8 @@ class Pipeline:
         self._crop_analyzers = crop_analyzers
         self._action_analyzer = action_analyzer
         self._notifier = notifier
+        self._zone_store = zone_store
+        self._zone_hits: dict[tuple[str, str], float] = {}
         self._resolver = IdentityResolver(store)
         self._gate = AdmissionGate(
             concurrency=settings.gpu_concurrency,
@@ -77,6 +83,8 @@ class Pipeline:
             await self._notifier.close()
 
     async def _process(self, obs: PersonObservation) -> None:
+        if self._masked_by_ignore_zone(obs):
+            return  # foot point falls in an ignore zone (tree/street/flag) — suppress noise
         async with self._gate:
             results = await asyncio.to_thread(self._run_crop_analyzers, obs.crop)
         embeddings = [r.embedding for r in results if r.embedding is not None]
@@ -85,6 +93,42 @@ class Pipeline:
         self._persist(obs, embeddings, decision.person_id)
         self._emit_identity(obs, decision)
         await self._maybe_emit_behavior(obs, decision.person_id)
+        self._emit_zone_alerts(obs, decision.person_id)
+
+    def _foot_point(self, obs: PersonObservation):
+        if self._zone_store is None or obs.frame_size is None or obs.box is None:
+            return None
+        return foot_point_normalized(obs.box, obs.frame_size)
+
+    def _masked_by_ignore_zone(self, obs: PersonObservation) -> bool:
+        point = self._foot_point(obs)
+        if point is None:
+            return False
+        return any(z.contains(point) for z in self._zone_store.for_camera(obs.camera) if z.kind == "ignore")
+
+    def _emit_zone_alerts(self, obs: PersonObservation, person_id: str) -> None:
+        point = self._foot_point(obs)
+        if point is None:
+            return
+        for zone in self._zone_store.for_camera(obs.camera):
+            if zone.kind != "alert" or not zone.contains(point):
+                continue
+            if not self._zone_cooldown_ok(obs.track_id, zone.id):
+                continue
+            event = self._store.add_event(
+                person_id=person_id, camera=obs.camera, kind="zone", label=zone.name, score=None
+            )
+            self._publish(event)
+            log.info("zone_entry", zone=zone.name, camera=obs.camera)
+
+    def _zone_cooldown_ok(self, track_id: str, zone_id: str) -> bool:
+        now = time.time()
+        key = (track_id, zone_id)
+        last = self._zone_hits.get(key)
+        if last is not None and now - last < _ZONE_COOLDOWN_S:
+            return False
+        self._zone_hits[key] = now
+        return True
 
     def _run_crop_analyzers(self, crop: np.ndarray | None) -> list:
         if crop is None:

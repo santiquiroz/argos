@@ -77,7 +77,18 @@ export const api = {
     client.post<DiscoveredCamera[]>("/discovery/scan", body).then((r) => r.data),
   notifyTest: () => client.post("/notify/test").then((r) => r.data),
   person: (id: string) => client.get<PersonDetail>(`/persons/${id}`).then((r) => r.data),
+  zones: (camera: string) => client.get<Zone[]>(`/cameras/${camera}/zones`).then((r) => r.data),
+  addZone: (z: Omit<Zone, "id">) => client.post<Zone>("/zones", z).then((r) => r.data),
+  removeZone: (id: string) => client.delete(`/zones/${id}`).then((r) => r.data),
 };
+
+export interface Zone {
+  id: string;
+  camera: string;
+  name: string;
+  kind: "alert" | "ignore";
+  points: [number, number][];
+}
 
 export interface Observation {
   id: string;

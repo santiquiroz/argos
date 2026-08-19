@@ -65,7 +65,7 @@ class Settings(BaseSettings):
 
     # Notifications (generic JSON webhook: ntfy / Home Assistant / Discord / Telegram-bot / Slack)
     notify_webhook_url: str = ""
-    notify_on: str = "behavior,new_person"  # comma-separated event kinds
+    notify_on: str = "behavior,new_person,zone"  # comma-separated event kinds
     notify_cooldown_s: int = 300  # suppress repeats for the same subject within this window
 
     # Retention (days)
