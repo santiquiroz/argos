@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -71,6 +72,7 @@ async def lifespan(app: FastAPI):
         notifier=notifier,
         zone_store=zones,
     )
+    app.state.started_at = time.time()
     app.state.settings = settings
     app.state.store = store
     app.state.bus = bus

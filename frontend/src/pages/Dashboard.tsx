@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, Circle } from "lucide-react";
+import { CheckCircle2, Circle, Cpu, HardDrive, MemoryStick } from "lucide-react";
+import { type ReactNode } from "react";
 import { api } from "../lib/api";
 import { useLiveEvents } from "../lib/useLiveEvents";
 import { Card, Stat } from "../components/ui/Card";
@@ -7,21 +8,27 @@ import { EventFeed } from "../components/EventFeed";
 
 export function Dashboard() {
   const health = useQuery({ queryKey: ["health"], queryFn: api.health, refetchInterval: 5000 });
-  const cameras = useQuery({ queryKey: ["cameras"], queryFn: api.cameras });
-  const persons = useQuery({ queryKey: ["persons"], queryFn: api.persons, refetchInterval: 10000 });
+  const status = useQuery({ queryKey: ["status"], queryFn: api.status, refetchInterval: 4000 });
   const events = useLiveEvents();
-
-  const ready = health.data?.analyzers.filter((a) => a.available).length ?? 0;
-  const total = health.data?.analyzers.length ?? 0;
+  const s = status.data;
 
   return (
     <div className="stack">
       <div className="grid grid--stats">
-        <Stat value={cameras.data?.length ?? "—"} label="Cameras" />
-        <Stat value={persons.data?.length ?? "—"} label="Persons seen" />
-        <Stat value={`${ready}/${total}`} label="Analyzers ready" />
-        <Stat value={health.data?.device ?? "—"} label="Inference device" />
+        <Stat value={s?.cameras ?? "—"} label="Cameras" />
+        <Stat value={s?.persons ?? "—"} label="Persons seen" />
+        <Stat value={s?.events_24h ?? "—"} label="Events (24h)" />
+        <Stat value={s?.behaviors_24h ?? "—"} label="Alerts (24h)" />
       </div>
+
+      <Card title="System">
+        <div className="grid grid--stats">
+          <Meter icon={<HardDrive size={16} strokeWidth={1.5} />} label="VRAM free" value={s?.vram_free_mb != null ? `${(s.vram_free_mb / 1024).toFixed(1)} GB` : "n/a"} />
+          <Meter icon={<Cpu size={16} strokeWidth={1.5} />} label="CPU" value={s?.cpu_percent != null ? `${s.cpu_percent.toFixed(0)}%` : "n/a"} />
+          <Meter icon={<MemoryStick size={16} strokeWidth={1.5} />} label="RAM" value={s?.ram_percent != null ? `${s.ram_percent.toFixed(0)}%` : "n/a"} />
+          <Meter icon={null} label="Uptime" value={s ? formatUptime(s.uptime_s) : "—"} />
+        </div>
+      </Card>
 
       <div className="grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
         <Card title="Analyzers">
@@ -48,4 +55,21 @@ export function Dashboard() {
       </div>
     </div>
   );
+}
+
+function Meter({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
+  return (
+    <div>
+      <div className="row muted" style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+        {icon} {label}
+      </div>
+      <div style={{ fontFamily: "var(--font-heading)", fontSize: 24, fontWeight: 700, marginTop: 4 }}>{value}</div>
+    </div>
+  );
+}
+
+function formatUptime(seconds: number): string {
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
+  return `${Math.floor(seconds / 86400)}d ${Math.floor((seconds % 86400) / 3600)}h`;
 }

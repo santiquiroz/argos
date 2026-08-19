@@ -64,8 +64,24 @@ export interface SettingsSnapshot {
   notifications: { enabled: boolean; notify_on: string; cooldown_s: number };
 }
 
+export interface StatusInfo {
+  device: string;
+  ingest: string;
+  uptime_s: number;
+  vram_free_mb: number | null;
+  cpu_percent: number | null;
+  ram_percent: number | null;
+  cameras: number;
+  zones: number;
+  persons: number;
+  enrolled: number;
+  events_24h: number;
+  behaviors_24h: number;
+}
+
 export const api = {
   health: () => client.get<Health>("/health").then((r) => r.data),
+  status: () => client.get<StatusInfo>("/status").then((r) => r.data),
   persons: () => client.get<Person[]>("/persons").then((r) => r.data),
   enroll: (id: string, name: string) => client.post(`/persons/${id}/enroll`, { name }).then((r) => r.data),
   events: (limit = 100) => client.get<ArgosEvent[]>("/events", { params: { limit } }).then((r) => r.data),

@@ -35,20 +35,84 @@ class NullProbe:
         return None
 
 
-class VramProbe:
-    """Free VRAM for a DirectML adapter.
+def query_free_vram_mb(adapter_index: int) -> int | None:
+    """Free local VRAM (MB) for a DXGI adapter via ``IDXGIAdapter3::QueryVideoMemoryInfo``.
 
-    TODO(port): bring over Upflow's tested DXGI ``QueryVideoMemoryInfo`` ctypes implementation.
-    Shipping untested COM vtable calls risks an access violation, so this fails open for now.
+    Pure ctypes/COM, no dependencies. Fully guarded — any failure returns ``None`` (fail-open),
+    never an exception, so a probe hiccup can't crash the pipeline. Windows-only.
     """
+    if sys.platform != "win32":
+        return None
+    try:
+        return _query_free_vram_mb_win(adapter_index)
+    except Exception:  # noqa: BLE001 - fail-open on any COM/ctypes error
+        return None
+
+
+def _query_free_vram_mb_win(adapter_index: int) -> int | None:
+    import ctypes
+    from ctypes import POINTER, Structure, byref, c_uint, c_uint64, c_void_p, wintypes
+
+    class GUID(Structure):
+        _fields_ = [
+            ("Data1", wintypes.DWORD),
+            ("Data2", wintypes.WORD),
+            ("Data3", wintypes.WORD),
+            ("Data4", ctypes.c_ubyte * 8),
+        ]
+
+    class MemInfo(Structure):
+        _fields_ = [
+            ("Budget", c_uint64),
+            ("CurrentUsage", c_uint64),
+            ("AvailableForReservation", c_uint64),
+            ("CurrentReservation", c_uint64),
+        ]
+
+    iid_factory1 = GUID(0x770AAE78, 0xF26F, 0x4DBA, (0xA8, 0x29, 0x25, 0x3C, 0x83, 0xD1, 0xB3, 0x87))
+    iid_adapter3 = GUID(0x645967A4, 0x1392, 0x4310, (0xA7, 0x98, 0x80, 0x53, 0xCE, 0x3E, 0x93, 0xFD))
+
+    def vmethod(obj, index, *argtypes):
+        vtbl = ctypes.cast(obj, POINTER(c_void_p))[0]
+        func = ctypes.cast(vtbl, POINTER(c_void_p))[index]
+        return ctypes.WINFUNCTYPE(ctypes.HRESULT, c_void_p, *argtypes)(func)
+
+    def release(obj):
+        if obj:
+            ctypes.WINFUNCTYPE(ctypes.c_ulong, c_void_p)(
+                ctypes.cast(ctypes.cast(obj, POINTER(c_void_p))[0], POINTER(c_void_p))[2]
+            )(obj)
+
+    dxgi = ctypes.windll.dxgi
+    dxgi.CreateDXGIFactory1.argtypes = [POINTER(GUID), POINTER(c_void_p)]
+    dxgi.CreateDXGIFactory1.restype = ctypes.HRESULT
+
+    factory = c_void_p()
+    dxgi.CreateDXGIFactory1(byref(iid_factory1), byref(factory))
+    adapter = c_void_p()
+    adapter3 = c_void_p()
+    try:
+        # EnumAdapters1 = vtable[12]; QueryInterface = vtable[0]; QueryVideoMemoryInfo = vtable[14].
+        vmethod(factory, 12, c_uint, POINTER(c_void_p))(factory, adapter_index, byref(adapter))
+        vmethod(adapter, 0, POINTER(GUID), POINTER(c_void_p))(adapter, byref(iid_adapter3), byref(adapter3))
+        info = MemInfo()
+        vmethod(adapter3, 14, c_uint, c_uint, POINTER(MemInfo))(adapter3, 0, 0, byref(info))
+        free_bytes = max(0, int(info.Budget) - int(info.CurrentUsage))
+        return free_bytes // (1024 * 1024)
+    finally:
+        release(adapter3)
+        release(adapter)
+        release(factory)
+
+
+class VramProbe:
+    """Free VRAM for a DirectML adapter via DXGI (fail-open)."""
 
     def __init__(self, device_id: int) -> None:
         self._device_id = device_id
 
     def free_mb(self) -> int | None:
-        if sys.platform != "win32":
-            return None
-        return None  # fail-open until the DXGI probe is ported
+        return query_free_vram_mb(self._device_id)
 
 
 def make_probe(device: str) -> ResourceProbe:

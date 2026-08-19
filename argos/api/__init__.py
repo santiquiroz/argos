@@ -9,12 +9,14 @@ from argos.api.health import router as health_router
 from argos.api.notify import router as notify_router
 from argos.api.persons import router as persons_router
 from argos.api.settings import router as settings_router
+from argos.api.status import router as status_router
 from argos.api.zones import router as zones_router
 
 
 def include_routers(app: FastAPI) -> None:
     for router in (
         health_router,
+        status_router,
         persons_router,
         events_router,
         discovery_router,

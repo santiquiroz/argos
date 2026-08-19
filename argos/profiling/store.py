@@ -197,6 +197,21 @@ class ProfileStore:
         ).fetchall()
         return [dict(r) for r in rows]
 
+    def stats(self) -> dict:
+        one_day_ago = time.time() - 86400
+        person_count = self._conn.execute("SELECT COUNT(*) c FROM persons").fetchone()["c"]
+        enrolled = self._conn.execute("SELECT COUNT(*) c FROM persons WHERE enrolled = 1").fetchone()["c"]
+        events_24h = self._conn.execute("SELECT COUNT(*) c FROM events WHERE ts >= ?", (one_day_ago,)).fetchone()["c"]
+        behaviors_24h = self._conn.execute(
+            "SELECT COUNT(*) c FROM events WHERE kind = 'behavior' AND ts >= ?", (one_day_ago,)
+        ).fetchone()["c"]
+        return {
+            "persons": person_count,
+            "enrolled": enrolled,
+            "events_24h": events_24h,
+            "behaviors_24h": behaviors_24h,
+        }
+
     # --- retention ---
     def purge_expired(self, *, embeddings_days: int, events_days: int) -> None:
         now = time.time()
