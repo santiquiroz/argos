@@ -115,6 +115,8 @@ export const api = {
     client.post<DiscoveredCamera[]>("/discovery/scan", body).then((r) => r.data),
   notifyTest: () => client.post("/notify/test").then((r) => r.data),
   digest: () => client.get<Digest>("/digest").then((r) => r.data),
+  backupExport: () => client.get("/backup/export").then((r) => r.data),
+  backupImport: (data: unknown) => client.post("/backup/import", data).then((r) => r.data),
   person: (id: string) => client.get<PersonDetail>(`/persons/${id}`).then((r) => r.data),
   zones: (camera: string) => client.get<Zone[]>(`/cameras/${camera}/zones`).then((r) => r.data),
   addZone: (z: Omit<Zone, "id">) => client.post<Zone>("/zones", z).then((r) => r.data),

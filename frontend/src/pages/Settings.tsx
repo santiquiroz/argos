@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, LogOut, Save, Send } from "lucide-react";
-import { type ReactNode, useEffect, useState } from "react";
+import { Bell, Download, LogOut, Save, Send, Upload } from "lucide-react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { api, SettingsSnapshot, SettingsUpdate } from "../lib/api";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
@@ -35,6 +35,7 @@ export function Settings() {
       <NotificationsCard snapshot={s} />
       <RetentionCard snapshot={s} />
       <LlmCard snapshot={s} />
+      <BackupCard />
 
       <Card title="Session">
         <p className="muted" style={{ marginTop: 0 }}>Forget the stored API key on this browser.</p>
@@ -152,6 +153,49 @@ function LlmCard({ snapshot }: { snapshot: SettingsSnapshot }) {
             <Save size={14} strokeWidth={1.5} /> Save
           </Button>
         </div>
+      </div>
+    </Card>
+  );
+}
+
+function BackupCard() {
+  const qc = useQueryClient();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [msg, setMsg] = useState("");
+
+  const onExport = async () => {
+    const data = await api.backupExport();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "argos-backup.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const onImport = async (file: File) => {
+    try {
+      const data = JSON.parse(await file.text());
+      const res = await api.backupImport(data);
+      setMsg(`Imported ${res.cameras} camera(s), ${res.zones} zone(s).`);
+      qc.invalidateQueries();
+    } catch {
+      setMsg("Import failed — invalid file.");
+    }
+  };
+
+  return (
+    <Card title="Backup">
+      <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
+        Export/import cameras, zones and settings (contains camera credentials). Biometric data stays local.
+      </p>
+      <div className="row">
+        <Button small variant="secondary" onClick={onExport}><Download size={14} strokeWidth={1.5} /> Export</Button>
+        <Button small variant="secondary" onClick={() => fileRef.current?.click()}><Upload size={14} strokeWidth={1.5} /> Import</Button>
+        <input ref={fileRef} type="file" accept="application/json" style={{ display: "none" }}
+          onChange={(e) => e.target.files?.[0] && onImport(e.target.files[0])} />
+        {msg && <span className="muted">{msg}</span>}
       </div>
     </Card>
   );
