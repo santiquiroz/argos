@@ -34,6 +34,7 @@ export function Settings() {
 
       <NotificationsCard snapshot={s} />
       <RetentionCard snapshot={s} />
+      <LlmCard snapshot={s} />
 
       <Card title="Session">
         <p className="muted" style={{ marginTop: 0 }}>Forget the stored API key on this browser.</p>
@@ -112,6 +113,46 @@ function RetentionCard({ snapshot }: { snapshot: SettingsSnapshot }) {
       <Button small style={{ marginTop: 12 }} onClick={() => save.mutate({ retain_crops_days: crops, retain_embeddings_days: emb, retain_events_days: evt })} disabled={save.isPending}>
         <Save size={14} strokeWidth={1.5} /> Save
       </Button>
+    </Card>
+  );
+}
+
+function LlmCard({ snapshot }: { snapshot: SettingsSnapshot }) {
+  const save = useSettingsSave();
+  const l = snapshot.llm;
+  const [enabled, setEnabled] = useState(l.enabled);
+  const [baseUrl, setBaseUrl] = useState(l.base_url);
+  const [model, setModel] = useState(l.model);
+  const [key, setKey] = useState("");
+  useEffect(() => { setEnabled(l.enabled); setBaseUrl(l.base_url); setModel(l.model); }, [l.enabled, l.base_url, l.model]);
+
+  const submit = () => {
+    const body: import("../lib/api").SettingsUpdate = { llm_enabled: enabled, llm_base_url: baseUrl, llm_model: model };
+    if (key) body.llm_api_key = key;
+    save.mutate(body);
+  };
+
+  return (
+    <Card title="LLM (daily digest)">
+      <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>
+        Point at your own Anthropic-compatible host (e.g. bipolar-code) to get an AI-written digest.
+        Nothing leaves your network.
+      </p>
+      <label className="row" style={{ gap: 8, marginBottom: 10 }}>
+        <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} /> Enabled
+      </label>
+      <div className="stack" style={{ gap: 10 }}>
+        <Field label="Base URL"><input className="input" value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="http://localhost:8000" /></Field>
+        <div className="row" style={{ gap: 10 }}>
+          <Field label="Model"><input className="input" value={model} onChange={(e) => setModel(e.target.value)} placeholder="claude-sonnet-4-6" /></Field>
+          <Field label={l.has_key ? "API key (set — leave blank to keep)" : "API key"}><input className="input" type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder="optional for local" /></Field>
+        </div>
+        <div>
+          <Button small onClick={submit} disabled={save.isPending}>
+            <Save size={14} strokeWidth={1.5} /> Save
+          </Button>
+        </div>
+      </div>
     </Card>
   );
 }

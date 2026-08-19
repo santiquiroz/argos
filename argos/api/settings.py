@@ -18,6 +18,10 @@ class SettingsUpdate(BaseModel):
     retain_crops_days: int | None = None
     retain_embeddings_days: int | None = None
     retain_events_days: int | None = None
+    llm_enabled: bool | None = None
+    llm_base_url: str | None = None
+    llm_api_key: str | None = None
+    llm_model: str | None = None
 
 
 @router.get("/settings")
@@ -45,6 +49,12 @@ def get_settings_snapshot(request: Request) -> dict:
             "webhook_url": s.notify_webhook_url,
             "notify_on": s.notify_on,
             "cooldown_s": s.notify_cooldown_s,
+        },
+        "llm": {
+            "enabled": s.llm_enabled,
+            "base_url": s.llm_base_url,
+            "model": s.llm_model,
+            "has_key": bool(s.llm_api_key),
         },
     }
 

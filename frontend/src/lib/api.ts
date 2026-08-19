@@ -62,6 +62,7 @@ export interface SettingsSnapshot {
   analyzers: Record<string, boolean>;
   retention_days: Record<string, number>;
   notifications: { enabled: boolean; webhook_url: string; notify_on: string; cooldown_s: number };
+  llm: { enabled: boolean; base_url: string; model: string; has_key: boolean };
 }
 export interface SettingsUpdate {
   notify_webhook_url?: string;
@@ -70,6 +71,16 @@ export interface SettingsUpdate {
   retain_crops_days?: number;
   retain_embeddings_days?: number;
   retain_events_days?: number;
+  llm_enabled?: boolean;
+  llm_base_url?: string;
+  llm_api_key?: string;
+  llm_model?: string;
+}
+export interface Digest {
+  text: string;
+  source: "llm" | "deterministic";
+  events_24h: number;
+  generated_at: number;
 }
 
 export interface StatusInfo {
@@ -101,6 +112,7 @@ export const api = {
   scan: (body: { subnet?: string | null; sweep: boolean; audit_credentials: boolean }) =>
     client.post<DiscoveredCamera[]>("/discovery/scan", body).then((r) => r.data),
   notifyTest: () => client.post("/notify/test").then((r) => r.data),
+  digest: () => client.get<Digest>("/digest").then((r) => r.data),
   person: (id: string) => client.get<PersonDetail>(`/persons/${id}`).then((r) => r.data),
   zones: (camera: string) => client.get<Zone[]>(`/cameras/${camera}/zones`).then((r) => r.data),
   addZone: (z: Omit<Zone, "id">) => client.post<Zone>("/zones", z).then((r) => r.data),

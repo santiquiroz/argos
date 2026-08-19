@@ -63,6 +63,13 @@ class Settings(BaseSettings):
     enable_reid: bool = True
     enable_gait: bool = False
 
+    # LLM (optional): daily digest + event narration via an Anthropic Messages-compatible endpoint.
+    # Point at your own local LLM host (e.g. bipolar-code) — nothing leaves your network.
+    llm_enabled: bool = False
+    llm_base_url: str = "http://localhost:8000"
+    llm_api_key: str = ""
+    llm_model: str = "claude-sonnet-4-6"
+
     # Notifications (generic JSON webhook: ntfy / Home Assistant / Discord / Telegram-bot / Slack)
     notify_webhook_url: str = ""
     notify_on: str = "behavior,new_person,zone"  # comma-separated event kinds

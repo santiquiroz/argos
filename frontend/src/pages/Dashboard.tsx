@@ -1,14 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, Circle, Cpu, HardDrive, MemoryStick } from "lucide-react";
+import { CheckCircle2, Circle, Cpu, HardDrive, MemoryStick, RefreshCw, Sparkles } from "lucide-react";
 import { type ReactNode } from "react";
 import { api } from "../lib/api";
 import { useLiveEvents } from "../lib/useLiveEvents";
+import { Button } from "../components/ui/Button";
 import { Card, Stat } from "../components/ui/Card";
+import { Badge } from "../components/ui/Feedback";
 import { EventFeed } from "../components/EventFeed";
 
 export function Dashboard() {
   const health = useQuery({ queryKey: ["health"], queryFn: api.health, refetchInterval: 5000 });
   const status = useQuery({ queryKey: ["status"], queryFn: api.status, refetchInterval: 4000 });
+  const digest = useQuery({ queryKey: ["digest"], queryFn: api.digest, staleTime: 120000 });
   const events = useLiveEvents();
   const s = status.data;
 
@@ -28,6 +31,24 @@ export function Dashboard() {
           <Meter icon={<MemoryStick size={16} strokeWidth={1.5} />} label="RAM" value={s?.ram_percent != null ? `${s.ram_percent.toFixed(0)}%` : "n/a"} />
           <Meter icon={null} label="Uptime" value={s ? formatUptime(s.uptime_s) : "—"} />
         </div>
+      </Card>
+
+      <Card
+        title="Daily digest"
+        actions={
+          <Button small variant="secondary" onClick={() => digest.refetch()} disabled={digest.isFetching}>
+            <RefreshCw size={14} strokeWidth={1.5} /> Refresh
+          </Button>
+        }
+      >
+        <p style={{ margin: 0, lineHeight: 1.6 }}>{digest.data?.text ?? "Generating…"}</p>
+        {digest.data && (
+          <div style={{ marginTop: 8 }}>
+            <Badge variant={digest.data.source === "llm" ? "live" : undefined}>
+              <Sparkles size={12} strokeWidth={1.5} /> {digest.data.source === "llm" ? "AI-written" : "auto"} · {digest.data.events_24h} events
+            </Badge>
+          </div>
+        )}
       </Card>
 
       <div className="grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
